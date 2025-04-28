@@ -1,0 +1,4 @@
+player_not_exist: A player by that name doesn't exist
+invalid_number: Invalid number. Please enter a valid number
+teleported_safe: Player teleported to a safe location.
+not_teleported_safe: Could not teleport player to safe location
