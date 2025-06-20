@@ -7,6 +7,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.NamespacedKey;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,10 +18,13 @@ public class ArmorManager {
     private static final NamespacedKey JUMP_MODIFIER_KEY = new NamespacedKey(EMCCOM.getInstance(), "armor_jump");
 
     public static void updatePlayerArmor(Player player) {
-        ArmorStats stats = new ArmorStats(player);
-        playerArmorStats.put(player.getUniqueId(), stats);
-        
-        applyArmorEffects(player, stats);
+        // Schedule on main thread to ensure proper timing
+        EMCCOM.getInstance().getServer().getScheduler().runTask(EMCCOM.getInstance(), () -> {
+            ArmorStats stats = new ArmorStats(player);
+            playerArmorStats.put(player.getUniqueId(), stats);
+            
+            applyArmorEffects(player, stats);
+        });
     }
 
     public static void removePlayer(Player player) {
@@ -36,44 +40,48 @@ public class ArmorManager {
         // Apply movement speed modifier
         AttributeInstance speedAttribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         if (speedAttribute != null) {
-            // Remove existing modifier
-            speedAttribute.getModifiers().forEach(modifier -> {
-                if (modifier.getKey().equals(SPEED_MODIFIER_KEY)) {
-                    speedAttribute.removeModifier(modifier);
-                }
-            });
+            // Remove existing modifier first - create a list to avoid concurrent modification
+            List<AttributeModifier> speedModifiersToRemove = speedAttribute.getModifiers().stream()
+                .filter(modifier -> modifier.getKey().equals(SPEED_MODIFIER_KEY))
+                .toList();
+            speedModifiersToRemove.forEach(speedAttribute::removeModifier);
 
-            // Apply new speed modifier (multiplicative)
-            double speedModifier = stats.getSpeedMultiplier() - 1.0; // Convert to modifier value
-            if (speedModifier != 0.0) {
+            // Apply new speed modifier if different from default
+            double speedMultiplier = stats.getSpeedMultiplier();
+            if (speedMultiplier != 1.0) {
+                // Use MULTIPLY_SCALAR_1 which multiplies by (1 + value)
+                // So if we want 70% speed, we need -0.3 as the modifier value
+                double modifierValue = speedMultiplier - 1.0;
                 AttributeModifier modifier = new AttributeModifier(
                     SPEED_MODIFIER_KEY,
-                    speedModifier,
+                    modifierValue,
                     AttributeModifier.Operation.MULTIPLY_SCALAR_1
                 );
                 speedAttribute.addModifier(modifier);
+                EMCCOM.getInstance().getLogger().info("DEBUG: Applied speed modifier " + modifierValue + " (target: " + speedMultiplier + ")");
             }
         }
 
         // Apply jump strength modifier
         AttributeInstance jumpAttribute = player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH);
         if (jumpAttribute != null) {
-            // Remove existing modifier
-            jumpAttribute.getModifiers().forEach(modifier -> {
-                if (modifier.getKey().equals(JUMP_MODIFIER_KEY)) {
-                    jumpAttribute.removeModifier(modifier);
-                }
-            });
+            // Remove existing modifier first
+            List<AttributeModifier> jumpModifiersToRemove = jumpAttribute.getModifiers().stream()
+                .filter(modifier -> modifier.getKey().equals(JUMP_MODIFIER_KEY))
+                .toList();
+            jumpModifiersToRemove.forEach(jumpAttribute::removeModifier);
 
-            // Apply new jump modifier
-            double jumpModifier = stats.getJumpMultiplier() - 1.0;
-            if (jumpModifier != 0.0) {
+            // Apply new jump modifier if different from default
+            double jumpMultiplier = stats.getJumpMultiplier();
+            if (jumpMultiplier != 1.0) {
+                double modifierValue = jumpMultiplier - 1.0;
                 AttributeModifier modifier = new AttributeModifier(
                     JUMP_MODIFIER_KEY,
-                    jumpModifier,
+                    modifierValue,
                     AttributeModifier.Operation.MULTIPLY_SCALAR_1
                 );
                 jumpAttribute.addModifier(modifier);
+                EMCCOM.getInstance().getLogger().info("DEBUG: Applied jump modifier " + modifierValue + " (target: " + jumpMultiplier + ")");
             }
         }
     }
@@ -82,21 +90,19 @@ public class ArmorManager {
         // Remove speed modifier
         AttributeInstance speedAttribute = player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
         if (speedAttribute != null) {
-            speedAttribute.getModifiers().forEach(modifier -> {
-                if (modifier.getKey().equals(SPEED_MODIFIER_KEY)) {
-                    speedAttribute.removeModifier(modifier);
-                }
-            });
+            List<AttributeModifier> speedModifiersToRemove = speedAttribute.getModifiers().stream()
+                .filter(modifier -> modifier.getKey().equals(SPEED_MODIFIER_KEY))
+                .toList();
+            speedModifiersToRemove.forEach(speedAttribute::removeModifier);
         }
 
         // Remove jump modifier
         AttributeInstance jumpAttribute = player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH);
         if (jumpAttribute != null) {
-            jumpAttribute.getModifiers().forEach(modifier -> {
-                if (modifier.getKey().equals(JUMP_MODIFIER_KEY)) {
-                    jumpAttribute.removeModifier(modifier);
-                }
-            });
+            List<AttributeModifier> jumpModifiersToRemove = jumpAttribute.getModifiers().stream()
+                .filter(modifier -> modifier.getKey().equals(JUMP_MODIFIER_KEY))
+                .toList();
+            jumpModifiersToRemove.forEach(jumpAttribute::removeModifier);
         }
     }
 
@@ -122,11 +128,13 @@ public class ArmorManager {
     }
 
     public static void refreshAllPlayerArmor() {
-        playerArmorStats.values().forEach(ArmorStats::refresh);
-        playerArmorStats.forEach((uuid, stats) -> {
-            Player player = EMCCOM.getInstance().getServer().getPlayer(uuid);
-            if (player != null && player.isOnline()) {
-                applyArmorEffects(player, stats);
+        // Run on main thread
+        EMCCOM.getInstance().getServer().getScheduler().runTask(EMCCOM.getInstance(), () -> {
+            for (UUID uuid : playerArmorStats.keySet()) {
+                Player player = EMCCOM.getInstance().getServer().getPlayer(uuid);
+                if (player != null && player.isOnline()) {
+                    updatePlayerArmor(player);
+                }
             }
         });
     }

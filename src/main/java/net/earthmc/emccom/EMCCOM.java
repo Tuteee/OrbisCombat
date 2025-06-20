@@ -32,7 +32,9 @@ public final class EMCCOM extends JavaPlugin {
         
         // Check for Nexo dependency
         if (!getServer().getPluginManager().isPluginEnabled("Nexo")) {
-            getLogger().warning("Nexo plugin not found! Some armor features may not work properly.");
+            getLogger().warning("Nexo plugin not found! Armor system will only work with vanilla armor.");
+        } else {
+            getLogger().info("Nexo found! Custom armor support enabled.");
         }
         
         Translation.loadStrings();

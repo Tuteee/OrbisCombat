@@ -23,7 +23,10 @@ public class ArmorListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        ArmorManager.updatePlayerArmor(player);
+        // Delay armor update slightly to ensure player is fully loaded
+        EMCCOM.getInstance().getServer().getScheduler().runTaskLater(EMCCOM.getInstance(), () -> {
+            ArmorManager.updatePlayerArmor(player);
+        }, 1L);
     }
 
     @EventHandler
@@ -32,7 +35,7 @@ public class ArmorListener implements Listener {
         ArmorManager.removePlayer(player);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
@@ -43,8 +46,10 @@ public class ArmorListener implements Listener {
             isArmorItem(event.getCurrentItem()) || 
             isArmorItem(event.getCursor())) {
             
-            // Update armor stats after the inventory change
-            ArmorManager.updatePlayerArmor(player);
+            // Update armor stats after the inventory change with a small delay
+            EMCCOM.getInstance().getServer().getScheduler().runTaskLater(EMCCOM.getInstance(), () -> {
+                ArmorManager.updatePlayerArmor(player);
+            }, 1L);
         }
     }
 
@@ -55,7 +60,9 @@ public class ArmorListener implements Listener {
         
         if (isArmorItem(brokenItem)) {
             // Delay armor update to ensure the broken item is removed
-            ArmorManager.updatePlayerArmor(player);
+            EMCCOM.getInstance().getServer().getScheduler().runTaskLater(EMCCOM.getInstance(), () -> {
+                ArmorManager.updatePlayerArmor(player);
+            }, 1L);
         }
     }
 
@@ -109,11 +116,20 @@ public class ArmorListener implements Listener {
             return;
         }
         
+        // Only check if player is actually moving and is in water
+        if (event.getFrom().equals(event.getTo()) || !player.isInWater()) {
+            return;
+        }
+        
         // Check for swimming restrictions in heavy armor
         if (player.isSwimming() && !ArmorManager.canPlayerSwim(player)) {
             // Cancel movement and notify player
             event.setCancelled(true);
-            player.sendMessage(Component.text("You cannot swim effectively in heavy armor!", NamedTextColor.RED));
+            
+            // Send message with cooldown to prevent spam
+            if (System.currentTimeMillis() % 1000 < 50) { // Only send message roughly once per second
+                player.sendMessage(Component.text("You cannot swim effectively in heavy armor!", NamedTextColor.RED));
+            }
             
             // Apply drowning-like effects
             if (player.getRemainingAir() > 0) {
@@ -122,7 +138,7 @@ public class ArmorListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
             return;
@@ -133,14 +149,20 @@ public class ArmorListener implements Listener {
             return;
         }
 
-        // Increase hunger loss when in combat with heavy armor
+        // Only apply penalties when food level is decreasing
+        if (event.getFoodLevel() >= player.getFoodLevel()) {
+            return;
+        }
+
+        // Increase hunger loss when in combat with armor that has hunger penalties
         if (CombatHandler.isTagged(player)) {
             double hungerMultiplier = ArmorManager.getHungerMultiplier(player);
             
-            // Only increase hunger loss, never decrease it
-            if (hungerMultiplier > 0 && event.getFoodLevel() < player.getFoodLevel()) {
-                int additionalHungerLoss = (int) Math.ceil(hungerMultiplier * 2);
-                int newFoodLevel = Math.max(0, event.getFoodLevel() - additionalHungerLoss);
+            // Apply additional hunger loss
+            if (hungerMultiplier > 0) {
+                int currentLoss = player.getFoodLevel() - event.getFoodLevel();
+                int additionalLoss = (int) Math.ceil(currentLoss * hungerMultiplier);
+                int newFoodLevel = Math.max(0, event.getFoodLevel() - additionalLoss);
                 event.setFoodLevel(newFoodLevel);
             }
         }
@@ -156,6 +178,32 @@ public class ArmorListener implements Listener {
                 event.setCancelled(true);
                 player.sendMessage(Component.text("You're too exhausted to sprint in heavy armor!", NamedTextColor.RED));
             }
+        }
+    }
+
+    // Add this new event handler for when players change armor manually
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
+        // Update armor if player interacted with armor stand
+        EMCCOM.getInstance().getServer().getScheduler().runTaskLater(EMCCOM.getInstance(), () -> {
+            ArmorManager.updatePlayerArmor(event.getPlayer());
+        }, 1L);
+    }
+
+    // Add handler for when players equip armor by right-clicking
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+        
+        if (item != null && isArmorItem(item) && 
+            (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_AIR || 
+             event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK)) {
+            
+            // Delay update to allow the equip to process
+            EMCCOM.getInstance().getServer().getScheduler().runTaskLater(EMCCOM.getInstance(), () -> {
+                ArmorManager.updatePlayerArmor(player);
+            }, 2L);
         }
     }
 
