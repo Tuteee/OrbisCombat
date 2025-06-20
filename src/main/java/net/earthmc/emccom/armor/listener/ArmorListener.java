@@ -1,4 +1,4 @@
-package net.earthmc.emccom.combat.armor.listener;
+package net.earthmc.emccom.armor.listener;
 
 import net.earthmc.emccom.EMCCOM;
 import net.earthmc.emccom.armor.ArmorManager;
