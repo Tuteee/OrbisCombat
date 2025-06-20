@@ -12,7 +12,12 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 public class CommandListener implements Listener {
 
     private static final CommandList BLACKLISTED_COMMANDS = new CommandList(ImmutableSet.of(
-            "t spawn", "n spawn", "warp", "trade", "res spawn", "home", "tradesystem:trade","town spawn","nation spawn","resident spawn","homes","towny:nation spawn","towny:town spawn","towny:resident spawn","player spawn","towny:player spawn","towny:n spawn","towny:nat spawn","towny:tw spawn","towny:res spawn","towny:t spawn","suicide"));
+            "t spawn", "n spawn", "warp", "trade", "res spawn", "home", "tradesystem:trade",
+            "town spawn","nation spawn","resident spawn","homes","towny:nation spawn",
+            "towny:town spawn","towny:resident spawn","player spawn","towny:player spawn",
+            "towny:n spawn","towny:nat spawn","towny:tw spawn","towny:res spawn","towny:t spawn",
+            "suicide", "kill", "orbiscore:suicide", "orbiscore:kill", "essentials:suicide",
+            "essentials:kill", "ec:suicide", "ec:kill"));
 
     @EventHandler
     public void onPreProcessCommand(PlayerCommandPreprocessEvent event) {

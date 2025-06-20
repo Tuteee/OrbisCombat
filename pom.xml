@@ -6,7 +6,7 @@
 
     <groupId>net.earthmc</groupId>
     <artifactId>EMCCOM</artifactId>
-    <version>1.4.32</version>
+    <version>1.5</version>
     <packaging>jar</packaging>
 
     <name>OrbisCombat</name>
