@@ -1,10 +1,11 @@
 name: OrbisCombat
 version: ${project.version}
 main: net.earthmc.emccom.EMCCOM
-api-version: '1.20'
+api-version: '1.21'
 authors: [ Foksha, Error110, Windows10Laptop, CorruptedGreed ]
-description: A combat plugin!
+description: A combat plugin with advanced armor system!
 depend: [Towny]
+softdepend: [Nexo]
 
 folia-supported: true
 
@@ -25,6 +26,12 @@ commands:
     permission: emccom.command.combattag
     permission-message: You do not have permission to run this command!
     usage: /combattag help
+  armor:
+    description: Check armor statistics and manage armor system.
+    permission: emccom.command.armor
+    permission-message: You do not have permission to run this command!
+    usage: /armor help
+    aliases: [armorstats, armour]
 
 permissions:
   emccom.command.basic:
@@ -32,6 +39,12 @@ permissions:
     default: true
   emccom.command.combattag:
     description: Allows access to combat tag management commands
+    default: op
+  emccom.command.armor:
+    description: Allows access to armor status commands
+    default: true
+  emccom.command.armor.refresh:
+    description: Allows refreshing armor calculations for players
     default: op
   emccom.combattag.bypass:
     description: Allows bypassing combat tag restrictions

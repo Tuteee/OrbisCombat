@@ -46,13 +46,17 @@
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>nexomc</id>
+            <url>https://repo.nexomc.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.4-R0.1-SNAPSHOT</version>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -60,6 +64,13 @@
             <artifactId>towny</artifactId>
             <version>0.100.2.2</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nexomc</groupId>
+            <artifactId>nexo</artifactId>
+            <version>1.21.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/nexo-1.7.1.jar</systemPath>
         </dependency>
     </dependencies>
 </project>
