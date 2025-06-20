@@ -156,3 +156,4 @@ public class ArmorCommand implements CommandExecutor, TabCompleter {
 
         return completions;
     }
+}
