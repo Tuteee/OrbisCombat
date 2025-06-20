@@ -7,9 +7,11 @@ import com.palmergames.util.TimeTools;
 import net.earthmc.emccom.combat.CombatHandler;
 import net.earthmc.emccom.combat.bossbar.BossBarTask;
 import net.earthmc.emccom.manager.NationOutlawManager;
+import net.earthmc.emccom.manager.NewPlayerManager;
 import net.earthmc.emccom.manager.ResidentMetadataManager;
 import net.earthmc.emccom.object.CombatPref;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -21,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -45,6 +48,28 @@ public class CombatListener implements Listener {
 
     private Set<UUID> deathsForLoggingOut = new HashSet<>();
 
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        Resident resident = TownyAPI.getInstance().getResident(player);
+        
+        if (resident != null) {
+            // Mark first join for new players
+            NewPlayerManager.markFirstJoin(resident);
+            
+            // Send protection status message if they have protection
+            if (NewPlayerManager.hasNewPlayerProtection(resident)) {
+                long remainingTime = NewPlayerManager.getRemainingProtectionTime(resident);
+                long hours = remainingTime / (1000 * 60 * 60);
+                long minutes = (remainingTime % (1000 * 60 * 60)) / (1000 * 60);
+                
+                player.sendMessage(Component.text("=== New Player Protection ===", NamedTextColor.GOLD));
+                player.sendMessage(Component.text("You are protected from PvP for " + hours + "h " + minutes + "m", NamedTextColor.GREEN));
+                player.sendMessage(Component.text("Use '/orbiscombat protection disable' to disable protection early", NamedTextColor.YELLOW));
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPvP(TownyPlayerDamagePlayerEvent event) {
         if (!event.isCancelled())
@@ -63,6 +88,17 @@ public class CombatListener implements Listener {
         Resident victimResident = TownyAPI.getInstance().getResident(victim);
 
         if (attackerResident == null || victimResident == null) {
+            return;
+        }
+
+        // Check for new player protection
+        if (NewPlayerManager.hasNewPlayerProtection(attackerResident)) {
+            attacker.sendMessage(Component.text("You cannot attack players while you have new player protection! Use '/orbiscombat protection disable' to disable it.", NamedTextColor.RED));
+            return;
+        }
+
+        if (NewPlayerManager.hasNewPlayerProtection(victimResident)) {
+            attacker.sendMessage(Component.text(victim.getName() + " has new player protection and cannot be attacked!", NamedTextColor.RED));
             return;
         }
 

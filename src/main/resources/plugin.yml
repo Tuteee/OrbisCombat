@@ -9,8 +9,30 @@ depend: [Towny]
 folia-supported: true
 
 commands:
+  orbiscombat:
+    description: Main OrbisCombat command with subcommands for combat management.
+    permission: emccom.command.basic
+    permission-message: You do not have permission to run this command!
+    usage: /orbiscombat help
+    aliases: [oc]
+  combat:
+    description: Alias for OrbisCombat command.
+    permission: emccom.command.basic
+    permission-message: You do not have permission to run this command!
+    usage: /combat help
   combattag:
-    description: Assists admins in tagging and untagging users.
+    description: Legacy command for combat tagging (backwards compatibility).
     permission: emccom.command.combattag
     permission-message: You do not have permission to run this command!
     usage: /combattag help
+
+permissions:
+  emccom.command.basic:
+    description: Allows access to basic OrbisCombat commands
+    default: true
+  emccom.command.combattag:
+    description: Allows access to combat tag management commands
+    default: op
+  emccom.combattag.bypass:
+    description: Allows bypassing combat tag restrictions
+    default: false

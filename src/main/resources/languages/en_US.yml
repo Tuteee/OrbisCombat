@@ -2,3 +2,10 @@ player_not_exist: A player by that name doesn't exist
 invalid_number: Invalid number. Please enter a valid number
 teleported_safe: Player teleported to a safe location.
 not_teleported_safe: Could not teleport player to safe location
+new_player_protection_active: You have new player protection active
+new_player_protection_disabled: Your new player protection has been disabled
+new_player_protection_expired: Your new player protection has expired
+combat_tag_applied: You have been combat tagged
+combat_tag_removed: You are no longer in combat
+arena_keepinv_message: You kept your items because you died in combat within an arena
+player_head_obtained: You obtained {player}'s head!
