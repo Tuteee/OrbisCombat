@@ -46,6 +46,9 @@ permissions:
   emccom.command.armor.refresh:
     description: Allows refreshing armor calculations for players
     default: op
+  emccom.command.reload:
+    description: Allows reloading the plugin configuration
+    default: op
   emccom.combattag.bypass:
     description: Allows bypassing combat tag restrictions
     default: false

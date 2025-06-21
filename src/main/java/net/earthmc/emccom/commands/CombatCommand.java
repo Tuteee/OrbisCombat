@@ -2,7 +2,10 @@ package net.earthmc.emccom.commands;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Resident;
+import net.earthmc.emccom.EMCCOM;
+import net.earthmc.emccom.armor.ArmorManager;
 import net.earthmc.emccom.combat.CombatHandler;
+import net.earthmc.emccom.config.Config;
 import net.earthmc.emccom.manager.NewPlayerManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -34,6 +37,7 @@ public class CombatCommand implements CommandExecutor, TabCompleter {
             case "untag" -> parseUntagCommand(sender, args);
             case "status" -> parseStatusCommand(sender, args);
             case "protection" -> parseProtectionCommand(sender, args);
+            case "reload" -> parseReloadCommand(sender, args);
             default -> {
                 sender.sendMessage(Component.text("[OrbisCombat]: Incorrect Usage: /" + label + " help", NamedTextColor.RED));
             }
@@ -47,6 +51,10 @@ public class CombatCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("/" + getMainCommand(sender) + " untag <username> - Remove combat tag", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("/" + getMainCommand(sender) + " status [username] - Check combat/protection status", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("/" + getMainCommand(sender) + " protection disable - Disable new player protection", NamedTextColor.GRAY));
+        
+        if (sender.hasPermission("emccom.command.reload")) {
+            sender.sendMessage(Component.text("/" + getMainCommand(sender) + " reload - Reload plugin configuration", NamedTextColor.GRAY));
+        }
     }
 
     private String getMainCommand(CommandSender sender) {
@@ -182,6 +190,40 @@ public class CombatCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Component.text("[OrbisCombat]: Your new player protection has been disabled! You can now engage in PvP.", NamedTextColor.YELLOW));
     }
 
+    private void parseReloadCommand(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("emccom.command.reload")) {
+            sender.sendMessage(Component.text("[OrbisCombat]: You don't have permission to reload the config!", NamedTextColor.RED));
+            return;
+        }
+
+        try {
+            // Reload the configuration file
+            EMCCOM.getInstance().reloadConfig();
+            
+            // Re-initialize config defaults (in case new values were added)
+            Config.init(EMCCOM.getInstance().getConfig());
+            
+            // Save the config to ensure any new defaults are written to file
+            EMCCOM.getInstance().saveConfig();
+            
+            // Refresh all player armor stats to apply new values
+            if (EMCCOM.getInstance().getConfig().getBoolean("armor.enabled", true)) {
+                ArmorManager.refreshAllPlayerArmor();
+                sender.sendMessage(Component.text("[OrbisCombat]: Config reloaded! Armor stats refreshed for all players.", NamedTextColor.GREEN));
+            } else {
+                sender.sendMessage(Component.text("[OrbisCombat]: Config reloaded! (Armor system is disabled)", NamedTextColor.GREEN));
+            }
+            
+            // Log the reload
+            EMCCOM.getInstance().getLogger().info("Configuration reloaded by " + sender.getName());
+            
+        } catch (Exception e) {
+            sender.sendMessage(Component.text("[OrbisCombat]: Error reloading config: " + e.getMessage(), NamedTextColor.RED));
+            EMCCOM.getInstance().getLogger().severe("Error reloading config: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
         List<String> completions = new ArrayList<>();
@@ -191,6 +233,11 @@ public class CombatCommand implements CommandExecutor, TabCompleter {
             
             if (sender.hasPermission("emccom.command.combattag")) {
                 subcommands = Arrays.asList("help", "tag", "untag", "status", "protection");
+            }
+            
+            if (sender.hasPermission("emccom.command.reload")) {
+                subcommands = new ArrayList<>(subcommands);
+                subcommands.add("reload");
             }
             
             return subcommands.stream()

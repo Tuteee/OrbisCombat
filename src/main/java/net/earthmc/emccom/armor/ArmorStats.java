@@ -44,14 +44,8 @@ public class ArmorStats {
 
             ArmorType armorType = getArmorType(armor);
             if (armorType == null) {
-                // Debug: Log when armor type is not detected
-                EMCCOM.getInstance().getLogger().info("DEBUG: Could not detect armor type for " + armor.getType().name());
                 continue;
             }
-
-            // Debug: Log detected armor type and its config values
-            EMCCOM.getInstance().getLogger().info("DEBUG: Detected armor type " + armorType.getName() + " for item " + armor.getType().name());
-            EMCCOM.getInstance().getLogger().info("DEBUG: Config values - Speed: " + armorType.getSpeedMultiplier() + ", Jump: " + armorType.getJumpMultiplier() + ", Protection: " + armorType.getProtectionMultiplier());
 
             armorPieces++;
 
@@ -77,17 +71,12 @@ public class ArmorStats {
             double hungerPenalty = (EMCCOM.getInstance().getConfig().getBoolean("armor.durability_penalties", true) && 
                                    durabilityPercent < 0.5) ? 1.5 : 1.0;
             
-            // Debug: Log before and after multiplication
-            EMCCOM.getInstance().getLogger().info("DEBUG: Before multiplication - Speed: " + speedMultiplier + ", Jump: " + jumpMultiplier);
-            
             // Fix: Use multiplication properly for speed/jump
             speedMultiplier *= armorType.getSpeedMultiplier() * speedPenalty;
             jumpMultiplier *= armorType.getJumpMultiplier() * jumpPenalty;
             dodgeChance += armorType.getDodgeChance() * damageMultiplier;
             hungerMultiplier += armorType.getHungerMultiplier() * hungerPenalty;
             staminaMultiplier *= armorType.getStaminaMultiplier();
-            
-            EMCCOM.getInstance().getLogger().info("DEBUG: After multiplication - Speed: " + speedMultiplier + ", Jump: " + jumpMultiplier);
         }
 
         // Calculate average durability
@@ -107,9 +96,6 @@ public class ArmorStats {
             totalProtection = Math.min(maxProtection, totalProtection);
             dodgeChance = Math.min(maxDodgeChance, dodgeChance);
         }
-
-        // Debug: Log final calculated stats
-        EMCCOM.getInstance().getLogger().info("DEBUG: Final stats - Speed: " + speedMultiplier + ", Jump: " + jumpMultiplier + ", Protection: " + totalProtection);
     }
 
     private ArmorType getArmorType(ItemStack armor) {
@@ -118,28 +104,18 @@ public class ArmorStats {
             try {
                 String nexoId = NexoItems.idFromItem(armor);
                 if (nexoId != null) {
-                    EMCCOM.getInstance().getLogger().info("DEBUG: Found Nexo item with ID: " + nexoId);
                     ArmorType nexoType = ArmorType.fromNexoId(nexoId);
                     if (nexoType != null) {
                         return nexoType;
-                    } else {
-                        EMCCOM.getInstance().getLogger().info("DEBUG: Nexo ID '" + nexoId + "' did not match any armor type");
                     }
-                } else {
-                    EMCCOM.getInstance().getLogger().info("DEBUG: Item is not a Nexo item: " + armor.getType().name());
                 }
             } catch (Exception e) {
-                EMCCOM.getInstance().getLogger().warning("DEBUG: Error checking Nexo item: " + e.getMessage());
                 // Fall through to vanilla detection
             }
         }
 
         // Fall back to vanilla armor detection
-        ArmorType vanillaType = ArmorType.fromVanillaArmor(armor.getType());
-        if (vanillaType != null) {
-            EMCCOM.getInstance().getLogger().info("DEBUG: Using vanilla armor type: " + vanillaType.getName() + " for " + armor.getType().name());
-        }
-        return vanillaType;
+        return ArmorType.fromVanillaArmor(armor.getType());
     }
 
     private double calculateDurabilityPercent(ItemStack armor) {

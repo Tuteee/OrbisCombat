@@ -58,7 +58,6 @@ public class ArmorManager {
                     AttributeModifier.Operation.MULTIPLY_SCALAR_1
                 );
                 speedAttribute.addModifier(modifier);
-                EMCCOM.getInstance().getLogger().info("DEBUG: Applied speed modifier " + modifierValue + " (target: " + speedMultiplier + ")");
             }
         }
 
@@ -81,7 +80,6 @@ public class ArmorManager {
                     AttributeModifier.Operation.MULTIPLY_SCALAR_1
                 );
                 jumpAttribute.addModifier(modifier);
-                EMCCOM.getInstance().getLogger().info("DEBUG: Applied jump modifier " + modifierValue + " (target: " + jumpMultiplier + ")");
             }
         }
     }
