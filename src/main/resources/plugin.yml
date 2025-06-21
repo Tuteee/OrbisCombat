@@ -3,7 +3,7 @@ version: ${project.version}
 main: net.earthmc.emccom.EMCCOM
 api-version: '1.21'
 authors: [ Foksha, Error110, Windows10Laptop, CorruptedGreed ]
-description: A combat plugin with advanced armor system!
+description: A combat plugin with advanced armor and stamina systems!
 depend: [Towny]
 softdepend: [Nexo]
 
@@ -32,6 +32,12 @@ commands:
     permission-message: You do not have permission to run this command!
     usage: /armor help
     aliases: [armorstats, armour]
+  stamina:
+    description: Check stamina status and manage stamina system.
+    permission: emccom.command.stamina
+    permission-message: You do not have permission to run this command!
+    usage: /stamina help
+    aliases: [stam, energy]
 
 permissions:
   emccom.command.basic:
@@ -45,6 +51,12 @@ permissions:
     default: true
   emccom.command.armor.refresh:
     description: Allows refreshing armor calculations for players
+    default: op
+  emccom.command.stamina:
+    description: Allows access to stamina status commands
+    default: true
+  emccom.command.stamina.admin:
+    description: Allows admin stamina management commands
     default: op
   emccom.command.reload:
     description: Allows reloading the plugin configuration

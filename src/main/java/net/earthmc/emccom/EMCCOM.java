@@ -12,7 +12,10 @@ import net.earthmc.emccom.combat.listener.PlayerDeathListener;
 import net.earthmc.emccom.commands.ArmorCommand;
 import net.earthmc.emccom.commands.CombatCommand;
 import net.earthmc.emccom.commands.NationOutlawCommand;
+import net.earthmc.emccom.commands.StaminaCommand;
 import net.earthmc.emccom.config.Config;
+import net.earthmc.emccom.stamina.listener.StaminaListener;
+import net.earthmc.emccom.stamina.task.StaminaTask;
 import net.earthmc.emccom.util.Translation;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -44,7 +47,7 @@ public final class EMCCOM extends JavaPlugin {
         setupCommands();
         runTasks();
         
-        getLogger().info("OrbisCombat enabled with armor system support!");
+        getLogger().info("OrbisCombat enabled with armor and stamina systems!");
     }
 
     @Override
@@ -65,6 +68,14 @@ public final class EMCCOM extends JavaPlugin {
         } else {
             getLogger().info("Armor system disabled in config.");
         }
+        
+        // Register stamina system listener only if enabled
+        if (getConfig().getBoolean("stamina.enabled", true)) {
+            getServer().getPluginManager().registerEvents(new StaminaListener(), this);
+            getLogger().info("Stamina system enabled!");
+        } else {
+            getLogger().info("Stamina system disabled in config.");
+        }
     }
 
     private void setupCommands() {
@@ -80,13 +91,26 @@ public final class EMCCOM extends JavaPlugin {
             Objects.requireNonNull(getCommand("armor")).setExecutor(new ArmorCommand());
         }
 
+        // Register stamina command only if stamina system is enabled
+        if (getConfig().getBoolean("stamina.enabled", true)) {
+            Objects.requireNonNull(getCommand("stamina")).setExecutor(new StaminaCommand());
+        }
+
         // Register the outlaw subcommand for the nation command
         NationOutlawCommand outlawCommand = new NationOutlawCommand();
         TownyCommandAddonAPI.addSubCommand(CommandType.NATION, "outlaw", outlawCommand);
     }
 
     private void runTasks() {
+        // Combat boss bar task
         getServer().getAsyncScheduler().runAtFixedRate(this, new BossBarTask(), 500L, 500L, TimeUnit.MILLISECONDS);
+        
+        // Combat handler task
         CombatHandler.startTask(this);
+        
+        // Stamina system task (only if enabled)
+        if (getConfig().getBoolean("stamina.enabled", true)) {
+            getServer().getAsyncScheduler().runAtFixedRate(this, new StaminaTask(), 100L, 100L, TimeUnit.MILLISECONDS);
+        }
     }
 }

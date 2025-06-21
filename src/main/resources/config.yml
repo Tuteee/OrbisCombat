@@ -5,7 +5,7 @@ arena_keepinv_requires_combat_tag: true
 armor:
   # Global armor settings
   enabled: true # Enable/disable entire armor system
-  dodge_enabled: true # Enable dodge mechanics
+  dodge_enabled: false # Enable dodge mechanics
   swimming_restrictions: true # Restrict swimming in heavy armor
   hunger_penalties: true # Apply hunger penalties
   durability_penalties: true # Apply penalties for damaged armor
@@ -15,36 +15,60 @@ armor:
 
   # Light Armor Stats (Leather/Chain + custom Nexo items starting with "light_")
   light:
-    protection_multiplier: 0.0 #
+    protection_multiplier: 0.03 #
     speed_multiplier: 0.95 # 95% movement speed
     jump_multiplier: 1.0 # 100% jump height
-    dodge_chance: 0.15 # 15% dodge chance per piece
+    dodge_chance: 0.6 # 15% dodge chance per piece
     hunger_multiplier: 0.1 # Additional hunger drain in combat
     stamina_multiplier: 1.0 # Normal stamina
 
   # Medium Armor Stats (Iron + custom Nexo items starting with "medium_")
   medium:
-    protection_multiplier: 0.05 #
+    protection_multiplier: 0.1 #
     speed_multiplier: 0.85 #
-    jump_multiplier: 0.98 #
-    dodge_chance: 0.08 # 8% dodge chance per piece
+    jump_multiplier: 0.99 #
+    dodge_chance: 0.03 # 8% dodge chance per piece
     hunger_multiplier: 0.05 # Slight hunger drain in combat
     stamina_multiplier: 0.8 # 80% stamina
 
   # Heavy Armor Stats (Diamond/Netherite + custom Nexo items starting with "heavy_")
   heavy:
-    protection_multiplier: 0.1 # 60% protection per piece
+    protection_multiplier: 0.15 # 60% protection per piece
     speed_multiplier: 0.8 # 70% movement speed
-    jump_multiplier: 0.95 # 70% jump height
+    jump_multiplier: 0.98 # 70% jump height
     dodge_chance: 0.0 # No dodge chance
     hunger_multiplier: 0.0 # No additional hunger drain
-    stamina_multiplier: 0.5 # 50% stamina
+    stamina_multiplier: 0.7 # 50% stamina
 
   # Wizard Armor Stats (Custom Nexo items starting with "wizard_")
   wizard:
-    protection_multiplier: 0.05 # 5% protection per piece
+    protection_multiplier: 0.0 # 5% protection per piece
     speed_multiplier: 1.0 # Normal movement speed
     jump_multiplier: 1.0 # 110% jump height
     dodge_chance: 0.2 # 20% dodge chance per piece
     hunger_multiplier: 0.15 # Increased hunger drain in combat
-    stamina_multiplier: 1.1 # 120% stamina
+    stamina_multiplier: 1.0 # 120% stamina
+stamina:
+  # Global stamina settings
+  enabled: true # Enable/disable entire stamina system
+  show_action_bar: true # Show stamina bar in action bar during combat
+
+  # Stamina values
+  max_stamina: 100.0 # Maximum stamina points
+
+  # Regeneration rates (per second)
+  regen_rate_standing: 0.3 # Stamina regen when standing still
+  regen_rate_walking: 0.2 # Stamina regen when walking (not sprinting)
+
+  # Stamina costs
+  sprint_cost_per_second: 8.0 # Stamina drained per second of sprinting
+  jump_cost: 25.0 # Stamina cost per jump
+  attack_cost: 20.0 # Stamina cost per attack
+  block_cost: 10.0 # Stamina cost per shield block
+
+  # Exhaustion thresholds
+  exhausted_threshold: 20.0 # When moderate exhaustion effects kick in
+  very_exhausted_threshold: 5.0 # When severe exhaustion effects kick in
+
+  # Combat mechanics
+  damage_regen_delay_ms: 1000 # No stamina regen for 1 second after taking damage
