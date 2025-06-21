@@ -20,7 +20,6 @@ import net.earthmc.emccom.util.Translation;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public final class EMCCOM extends JavaPlugin {
     private static EMCCOM instance;
@@ -102,15 +101,15 @@ public final class EMCCOM extends JavaPlugin {
     }
 
     private void runTasks() {
-        // Combat boss bar task
-        getServer().getAsyncScheduler().runAtFixedRate(this, new BossBarTask(), 500L, 500L, TimeUnit.MILLISECONDS);
+        // Combat boss bar task - using normal Bukkit scheduler
+        new BossBarTask().runTaskTimerAsynchronously(this, 10L, 10L);
         
         // Combat handler task
         CombatHandler.startTask(this);
         
-        // Stamina system task (only if enabled)
+        // Stamina system task (only if enabled) - using normal Bukkit scheduler
         if (getConfig().getBoolean("stamina.enabled", true)) {
-            getServer().getAsyncScheduler().runAtFixedRate(this, new StaminaTask(), 100L, 100L, TimeUnit.MILLISECONDS);
+            new StaminaTask().runTaskTimer(this, 2L, 2L);
         }
     }
 }

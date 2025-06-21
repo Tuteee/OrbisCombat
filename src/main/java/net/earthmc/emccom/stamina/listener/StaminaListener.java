@@ -141,11 +141,16 @@ public class StaminaListener implements Listener {
         }
     }
 
-    // Handle when player starts or stops being in combat
+    // Initialize stamina when combat starts (but don't reset existing stamina)
     @EventHandler(priority = EventPriority.MONITOR)
     public void onCombatStart(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        
         if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player attacker) {
             // Initialize stamina for both players when combat starts
+            // This will only create new stamina data if they don't already have it
             StaminaManager.initializePlayer(victim);
             StaminaManager.initializePlayer(attacker);
         }

@@ -7,8 +7,6 @@ description: A combat plugin with advanced armor and stamina systems!
 depend: [Towny]
 softdepend: [Nexo]
 
-folia-supported: true
-
 commands:
   orbiscombat:
     description: Main OrbisCombat command with subcommands for combat management.

@@ -66,17 +66,24 @@ public class StaminaManager {
         // Calculate stamina regeneration based on player state
         double regenRate = 0.0;
         
-        // No regeneration if recently damaged
+        // FIXED: More restrictive regeneration conditions
         long damageDelay = EMCCOM.getInstance().getConfig().getLong("stamina.damage_regen_delay_ms", 1000);
-        if ((currentTime - data.lastDamageTime) < damageDelay) {
-            // No regen if recently damaged
-            regenRate = 0.0;
-        } else if (isStandingStill && !player.isSprinting()) {
-            regenRate = STAMINA_REGEN_RATE * armorStaminaMultiplier;
-        } else if (isMoving && !player.isSprinting()) {
-            regenRate = STAMINA_REGEN_WALKING * armorStaminaMultiplier;
+        boolean recentlyDamaged = (currentTime - data.lastDamageTime) < damageDelay;
+        
+        // Only allow regeneration if:
+        // 1. Not recently damaged
+        // 2. Not sprinting
+        // 3. Not moving too much (for standing still regen) or walking slowly (for walking regen)
+        if (!recentlyDamaged && !player.isSprinting()) {
+            if (isStandingStill) {
+                // Only regen when truly standing still
+                regenRate = STAMINA_REGEN_RATE * armorStaminaMultiplier;
+            } else if (isMoving && !isMovingTooFast(player, data)) {
+                // Only regen when walking slowly (not running around)
+                regenRate = STAMINA_REGEN_WALKING * armorStaminaMultiplier;
+            }
+            // No regen if moving too fast or doing any combat actions
         }
-        // No regen while sprinting
         
         // Apply stamina regeneration
         if (regenRate > 0) {
@@ -87,6 +94,12 @@ public class StaminaManager {
         if (player.isSprinting()) {
             double sprintCost = (SPRINT_COST_PER_SECOND / armorStaminaMultiplier) * deltaTime;
             data.stamina = Math.max(0, data.stamina - sprintCost);
+        }
+        
+        // Additional stamina drain if moving fast while not sprinting (prevents regen abuse)
+        if (!player.isSprinting() && isMovingTooFast(player, data)) {
+            double movementCost = (SPRINT_COST_PER_SECOND * 0.5 / armorStaminaMultiplier) * deltaTime;
+            data.stamina = Math.max(0, data.stamina - movementCost);
         }
         
         // Update tracking data
@@ -119,6 +132,10 @@ public class StaminaManager {
         };
 
         data.stamina = Math.max(0, data.stamina - cost);
+        
+        // FIXED: Record action time to prevent immediate regeneration
+        data.lastDamageTime = System.currentTimeMillis();
+        
         applyStaminaEffects(player, data);
         sendStaminaActionBar(player, data);
     }
@@ -159,7 +176,9 @@ public class StaminaManager {
 
     public static void initializePlayer(Player player) {
         if (CombatHandler.isTagged(player)) {
-            playerStamina.put(player.getUniqueId(), new StaminaData());
+            // Only initialize if player doesn't already have stamina data
+            // This prevents resetting stamina when player enters combat
+            playerStamina.computeIfAbsent(player.getUniqueId(), k -> new StaminaData());
         }
     }
 
@@ -170,18 +189,35 @@ public class StaminaManager {
         }
     }
 
+    // FIXED: Better movement detection
     private static boolean isPlayerMoving(Player player, StaminaData data) {
         if (data.lastLocation == null) {
+            data.updatePosition(player.getLocation());
             return false;
         }
         
-        // Consider player moving if they've moved more than 0.1 blocks horizontally
+        // Consider player moving if they've moved more than 0.05 blocks horizontally
         double distance = Math.sqrt(
             Math.pow(data.lastLocation.getX() - player.getLocation().getX(), 2) +
             Math.pow(data.lastLocation.getZ() - player.getLocation().getZ(), 2)
         );
         
         return distance > 0.05;
+    }
+
+    // NEW: Detect if player is moving too fast (prevents regen abuse)
+    private static boolean isMovingTooFast(Player player, StaminaData data) {
+        if (data.lastLocation == null) {
+            return false;
+        }
+        
+        // Consider "too fast" if moving more than 0.15 blocks per tick horizontally
+        double distance = Math.sqrt(
+            Math.pow(data.lastLocation.getX() - player.getLocation().getX(), 2) +
+            Math.pow(data.lastLocation.getZ() - player.getLocation().getZ(), 2)
+        );
+        
+        return distance > 0.15;
     }
 
     private static void applyStaminaEffects(Player player, StaminaData data) {

@@ -1,14 +1,12 @@
 package net.earthmc.emccom.stamina.task;
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.earthmc.emccom.stamina.StaminaManager;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.function.Consumer;
-
-public class StaminaTask implements Consumer<ScheduledTask> {
+public class StaminaTask extends BukkitRunnable {
 
     @Override
-    public void accept(ScheduledTask task) {
+    public void run() {
         StaminaManager.updateAllPlayerStamina();
     }
 }

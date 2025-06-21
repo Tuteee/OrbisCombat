@@ -1,6 +1,5 @@
 package net.earthmc.emccom.combat.bossbar;
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.earthmc.emccom.combat.CombatHandler;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -8,18 +7,18 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
-public class BossBarTask implements Consumer<ScheduledTask> {
+public class BossBarTask extends BukkitRunnable {
 
     private static final Map<UUID, BossBar> bossBarMap = new ConcurrentHashMap<>();
 
     @Override
-    public void accept(ScheduledTask task) {
+    public void run() {
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online == null) {
                 continue;
